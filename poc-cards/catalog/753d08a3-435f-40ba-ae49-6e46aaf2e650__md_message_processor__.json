@@ -1,0 +1,11 @@
+{
+    "inputMessageMetadata": {},
+    "outputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "ICsv"
+        }
+    },
+    "id": "753d08a3-435f-40ba-ae49-6e46aaf2e650",
+    "version": "5.2.0.0"
+}
