@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:cluster="http://www.mulesoft.org/schema/mule/ee/cluster" xmlns:ws="http://www.mulesoft.org/schema/mule/ws" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:context="http://www.springframework.org/schema/context" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd
+http://www.mulesoft.org/schema/mule/ws http://www.mulesoft.org/schema/mule/ws/current/mule-ws.xsd">
+    <context:property-placeholder location="flights-DEV.properties"/>
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+    <http:request-config name="United_HTTP_Request_Configuration" host="${united.host}" port="80" doc:name="HTTP Request Configuration"/>
+    <http:request-config name="American_HTTP_Request_Configuration" host="apdev-american-ws.cloudhub.io" port="80" basePath="/api" doc:name="HTTP Request Configuration">
+        <http:raml-api-configuration location="https://anypoint.mulesoft.com/apiplatform/repository/v2/organizations/fd604b43-365c-42e8-810f-733a2b7f411f/public/apis/67888/versions/70734/files/root  "/>
+    </http:request-config>
+    <ws:consumer-config name="Delta_Web_Service_Consumer" wsdlLocation="delta.wsdl" service="TicketServiceService" port="TicketServicePort" serviceAddress="http://training-u.cloudhub.io/essentials/delta" doc:name="Web Service Consumer"/>
+    <configuration defaultExceptionStrategy-ref="implementationChoice_Exception_Strategy" doc:name="Configuration">
+        <http:config useTransportForUris="false"/>
+    </configuration>
+    <choice-exception-strategy name= "implementationChoice_Exception_Strategy" >
+        <catch-exception-strategy doc:name="No flights-DW exception" when="#[exception.causeMatches('com.mulesoft.weave.*')]">
+            <set-payload value="NO FLIGHTS to #[flowVars.code + '\n' + exception]" doc:name="Set Payload"/>
+            <set-property propertyName="http.status" value="400" doc:name="Property"/>
+            <logger level="INFO" doc:name="Logger"/>
+        </catch-exception-strategy>
+        <catch-exception-strategy doc:name="Data Unavailable-all other exception">
+                <set-payload value=" DATA IS UNAVAILABLE. TRY LATER #['\n' + exception]" doc:name="Set Payload"/>
+                <set-property propertyName="http.status" value="500" doc:name="Property"/>
+                <logger level="INFO" doc:name="Logger"/>
+            </catch-exception-strategy>
+    </choice-exception-strategy>
+</mule>
