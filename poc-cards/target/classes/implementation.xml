@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:mulerequester="http://www.mulesoft.org/schema/mule/mulerequester" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:mulerequester="http://www.mulesoft.org/schema/mule/mulerequester" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
 	xmlns:spring="http://www.springframework.org/schema/beans" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
@@ -8,66 +8,120 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 http://www.mulesoft.org/schema/mule/mulerequester http://www.mulesoft.org/schema/mule/mulerequester/current/mule-mulerequester.xsd
 http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
-
-<file:connector name="file-connector" autoDelete="false" streaming="true" validateConnections="true" doc:name="File" workFileNamePattern=".*csv"/>
-
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+	
     <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
-    <file:connector name="File" readFromDirectory="D:\Users\sacchakr\Desktop\new" workFileNamePattern="details.csv" autoDelete="true" streaming="true" validateConnections="true" doc:name="File"/>
+    <file:connector name="File" readFromDirectory="D:\Users\sacchakr\Desktop\new" workFileNamePattern="details.csv" autoDelete="false" streaming="true" validateConnections="true" doc:name="File"/>
     <flow name="/getAccountDetails/{getCardNumber}">
         <http:listener config-ref="HTTP_Listener_Configuration" path="/getAccountDetails/{cardNumber}" doc:name="HTTP"/>
         <set-session-variable variableName="card" value="#[message.inboundProperties.'http.uri.params'.cardNumber]" doc:name="Session Variable"/>
         <choice doc:name="Choice">
             <when expression="#[sessionVars.card==&quot;1234567890123450&quot;]">
-                <flow-ref name="getMalyajDetailsFlow" doc:name="Malyaj"/>
+                <flow-ref name="getMalyajDetailsFlow" doc:name="getMalyajDetailsFlow"/>
             </when>
             <when expression="#[sessionVars.card==&quot;1234367891953450&quot;]">
-                <flow-ref name="getSmritiDetailsFlow" doc:name="Smriti"/>
+                <flow-ref name="getSmritiDetailsFlow" doc:name="getSmritiDetailsFlow"/>
             </when>
             <when expression="#[sessionVars.card==&quot;1234567814973450&quot;]">
-                <flow-ref name="getSakshiDetailsFlow" doc:name="Sakshi"/>
+                <flow-ref name="getSakshiDetailsFlow" doc:name="getSakshiDetailsFlow"/>
             </when>
             <when expression="#[sessionVars.card==&quot;1234567890393450&quot;]">
-                <flow-ref name="getSachinDetailsFlow" doc:name="Sachin"/>
+                <flow-ref name="getSachinDetailsFlow" doc:name="getSachinDetailsFlow"/>
             </when>
             <when expression="#[sessionVars.card==&quot;1234557890123450&quot;]">
-                <flow-ref name="getNishchalDetailsFlow" doc:name="Nishchal"/>
+                <flow-ref name="getNishchalDetailsFlow" doc:name="getNishchalDetailsFlow"/>
             </when>
             <when expression="#[sessionVars.card==&quot;1234569890123450&quot;]">
-                <flow-ref name="getMonicaDetailsFlow" doc:name="Monica"/>
+                <flow-ref name="getMonicaDetailsFlow" doc:name="getMonicaDetailsFlow"/>
             </when>
             <when expression="#[sessionVars.card==&quot;1034567890123450&quot;]">
-                <flow-ref name="getMohiniDetailsFlow" doc:name="Mohini"/>
+                <flow-ref name="getMohiniDetailsFlow" doc:name="getMohiniDetailsFlow"/>
             </when>
             <otherwise>
-                <flow-ref name="getAllDetailsFlow" doc:name="All Details"/>
+                <flow-ref name="getAllDetailsFlow" doc:name="getAllDetailsFlow"/>
             </otherwise>
         </choice>
     </flow>
     <sub-flow name="getMalyajDetailsFlow">
-        <mulerequester:request resource="file:///src/main/resources/details.csv?connector=file-connector" doc:name="Mule Requester"/>
-        <set-payload value="#[sessionVars.card]" doc:name="Set Payload"/>
+        <mulerequester:request resource="file://src/main/resources/1.csv" doc:name="Mule Requester"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="9606fca4-876e-4e87-b072-92360e0161be">
+            <dw:input-payload mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
         <logger message="#[payload]" level="INFO" doc:name="Logger"/>
     </sub-flow>
     <sub-flow name="getMohiniDetailsFlow">
-        <set-payload value="#[sessionVars.card]" doc:name="Copy_of_Set Payload"/>
+        <mulerequester:request resource="file://src/main/resources/2.csv" doc:name="Mule Requester"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="e421b5f4-0ad0-470a-a0b1-f396dd7d67a8">
+            <dw:input-payload mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
     </sub-flow>
     <sub-flow name="getMonicaDetailsFlow">
-        <set-payload value="#[sessionVars.card]" doc:name="Copy_of_Set Payload"/>
+        <mulerequester:request resource="file://src/main/resources/3.csv" doc:name="Mule Requester"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="96be7230-3a2f-4e8a-afb2-34f2b8f379c3">
+            <dw:input-payload mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
     </sub-flow>
     <sub-flow name="getNishchalDetailsFlow">
-        <set-payload value="#[sessionVars.card]" doc:name="Copy_of_Set Payload"/>
+        <mulerequester:request resource="file://src/main/resources/4.csv" doc:name="Mule Requester"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="f7bf8031-b6d9-476c-b00b-bbbbed17771f">
+            <dw:input-payload mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
     </sub-flow>
     <sub-flow name="getSachinDetailsFlow">
-        <set-payload value="#[sessionVars.card]" doc:name="Copy_of_Set Payload"/>
+        <mulerequester:request resource="file://src/main/resources/5.csv" doc:name="Mule Requester"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="8901b2eb-5c7c-4f15-9c4f-26cc041424b1">
+            <dw:input-payload mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
     </sub-flow>
     <sub-flow name="getSakshiDetailsFlow">
-        <set-payload value="#[sessionVars.card]" doc:name="Copy_of_Set Payload"/>
+        <mulerequester:request resource="file://src/main/resources/6.csv" doc:name="Mule Requester"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="7f9a94fc-97ef-4a76-ab8e-f21c38e6197b">
+            <dw:input-payload mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="file://src/main/resources/details.csv" level="INFO" doc:name="Logger"/>
     </sub-flow>
     <sub-flow name="getSmritiDetailsFlow">
-        <set-payload value="#[sessionVars.card]" doc:name="Copy_of_Set Payload"/>
+        <mulerequester:request resource="file://src/main/resources/7.csv" doc:name="Mule Requester"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="7a5a7660-d2a7-4921-b0b4-db7d873e11e3">
+            <dw:input-payload mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
     </sub-flow>
     <sub-flow name="getAllDetailsFlow">
-        <set-payload value="#[sessionVars.card]" doc:name="Copy_of_Set Payload"/>
+        <set-payload value="#[sessionVars.card]" doc:name="Set Payload"/>
+        <logger level="INFO" doc:name="Logger"/>
     </sub-flow>
 </mule>
