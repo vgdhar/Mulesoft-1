@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw"
+xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+xmlns:mulerequester="http://www.mulesoft.org/schema/mule/mulerequester"
+xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+xmlns="http://www.mulesoft.org/schema/mule/core"
+xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit"
+xmlns:http="http://www.mulesoft.org/schema/mule/http"
+xmlns:spring="http://www.springframework.org/schema/beans"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+http://www.mulesoft.org/schema/mule/mulerequester http://www.mulesoft.org/schema/mule/mulerequester/current/mule-mulerequester.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <http:listener-config name="card-details-specification-api-httpListenerConfig" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+    <apikit:config name="card-details-specification-api-config" raml="card-details-specification-api.raml" consoleEnabled="false" doc:name="Router"/>
+    <file:connector name="File" autoDelete="false" streaming="true" validateConnections="true" doc:name="File"/>
+    <flow name="card-details-specification-api-main">
+        <http:listener config-ref="card-details-specification-api-httpListenerConfig" path="/api/*" doc:name="HTTP"/>
+        <apikit:router config-ref="card-details-specification-api-config" doc:name="APIkit Router"/>
+        <exception-strategy ref="card-details-specification-api-apiKitGlobalExceptionMapping" doc:name="Reference Exception Strategy"/>
+    </flow>
+    <flow name="card-details-specification-api-console">
+        <http:listener config-ref="card-details-specification-api-httpListenerConfig" path="/console/*" doc:name="HTTP"/>
+        <apikit:console config-ref="card-details-specification-api-config" doc:name="APIkit Console"/>
+    </flow>
+    <flow name="get:/getAccountDetails:card-details-specification-api-config">
+        <flow-ref name="getAllDetailsFlow" doc:name="getAllDetailsFlow"/>
+
+    </flow>
+    <flow name="get:/getAccountDetails/{getCardNumber}:card-details-specification-api-config">
+        <set-session-variable variableName="account" value="#[message.inboundProperties.'http.uri.params'.getCardNumber]" doc:name="Session Variable"/>
+        <set-session-variable variableName="card" value="#[message.inboundProperties.'http.query.params'.accountNumber]" doc:name="Session Variable"/>
+        <logger message="#[sessionVars.account] + #[sessionVars.card]" level="INFO" doc:name="Logger"/>
+        <validation:all    doc:name="Validation">
+            <validation:validations>
+                <validation:is-number value="#[sessionVars.account]" numberType="LONG"/>
+                <validation:is-number value="#[sessionVars.card]" numberType="LONG"/>
+                <validation:validate-size value="#[sessionVars.account]" min="16" max="19"/>
+                <validation:validate-size value="#[sessionVars.card]" min="16" max="19"/>
+            </validation:validations>
+        </validation:all>
+        <choice doc:name="Choice">
+            <when expression="#[sessionVars.account==&quot;1234567890123450&quot;]">
+                <flow-ref name="getMalyajDetailsFlow" doc:name="getMalyajDetailsFlow"/>
+            </when>
+            <when expression="#[sessionVars.account==&quot;1234569890123450&quot;]">
+                <flow-ref name="getMohiniDetailsFlow" doc:name="getMohiniDetailsFlow"/>
+            </when>
+            <when expression="#[sessionVars.account==&quot;1034567890123450&quot;]">
+                <flow-ref name="getMonicaDetailsFlow" doc:name="getMonicaDetailsFlow"/>
+            </when>
+            <when expression="#[sessionVars.account==&quot;1234557890123450&quot;]">
+                <flow-ref name="getNishchalDetailsFlow" doc:name="getNishchalDetailsFlow"/>
+            </when>
+            <when expression="#[sessionVars.account==&quot;1234567890393450&quot;]">
+                <flow-ref name="getSachinDetailsFlow" doc:name="getSachinDetailsFlow"/>
+            </when>
+            <when expression="#[sessionVars.account==&quot;1234567814973450&quot;]">
+                <flow-ref name="getSakshiDetailsFlow" doc:name="getSakshiDetailsFlow"/>
+            </when>
+            <when expression="#[sessionVars.account==&quot;1234367891953450&quot;]">
+                <flow-ref name="getSmritiDetailsFlow" doc:name="getSmritiDetailsFlow"/>
+            </when>
+            <otherwise>
+                <logger message="{&quot;No data found&quot;}" level="INFO" doc:name="Logger"/>
+            </otherwise>
+        </choice>
+
+    </flow>
+
+    <sub-flow name="getMalyajDetailsFlow">
+        <mulerequester:request resource="file://src/main/resources/1.csv" doc:name="Mule Requester"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="c83a28c3-7d0a-4141-9829-d46c26be8eff">
+            <dw:input-payload mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+    </sub-flow>
+    <sub-flow name="getMohiniDetailsFlow">
+        <mulerequester:request resource="file://src/main/resources/2.csv" doc:name="Mule Requester"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="38d61a7e-ad4a-4058-aa04-2de7d46b63fc">
+            <dw:input-payload mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+    </sub-flow>
+    <sub-flow name="getMonicaDetailsFlow">
+        <mulerequester:request resource="file://src/main/resources/3.csv" doc:name="Mule Requester"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="e3a71744-1bd3-4c35-8aa0-9f42449c2a29">
+            <dw:input-payload mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+    </sub-flow>
+    <sub-flow name="getNishchalDetailsFlow">
+        <mulerequester:request resource="file://src/main/resources/4.csv" doc:name="Mule Requester"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="543a61df-50a6-41f7-b6e0-5e9260a22ab8">
+            <dw:input-payload mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+    </sub-flow>
+    <sub-flow name="getSachinDetailsFlow">
+        <mulerequester:request resource="file://src/main/resources/5.csv" doc:name="Mule Requester"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="35a4cd67-58d5-4897-a0f5-aff53880aba5">
+            <dw:input-payload mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+    </sub-flow>
+    <sub-flow name="getSakshiDetailsFlow">
+        <mulerequester:request resource="file://src/main/resources/6.csv" doc:name="Mule Requester"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="cda5dfec-3bd4-4c0e-be20-a078eebb4b0d">
+            <dw:input-payload mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+
+        <logger message="file://src/main/resources/details.csv" level="INFO" doc:name="Logger"/>
+    </sub-flow>
+    <sub-flow name="getSmritiDetailsFlow">
+        <mulerequester:request resource="file://src/main/resources/7.csv" doc:name="Mule Requester"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="5572f07b-162a-4bb7-8a6c-775cd85d626f">
+            <dw:input-payload mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+    </sub-flow>
+    <sub-flow name="getAllDetailsFlow">
+        <scatter-gather doc:name="Scatter-Gather">
+            <flow-ref name="getMalyajDetailsFlow" doc:name="getMalyajDetailsFlow"/>
+            <flow-ref name="getMohiniDetailsFlow" doc:name="getMohiniDetailsFlow"/>
+            <flow-ref name="getMonicaDetailsFlow" doc:name="getMonicaDetailsFlow"/>
+            <flow-ref name="getNishchalDetailsFlow" doc:name="getNishchalDetailsFlow"/>
+            <flow-ref name="getSachinDetailsFlow" doc:name="getSachinDetailsFlow"/>
+            <flow-ref name="getSakshiDetailsFlow" doc:name="getSakshiDetailsFlow"/>
+            <flow-ref name="getSmritiDetailsFlow" doc:name="getSmritiDetailsFlow"/>
+        </scatter-gather>
+        <dw:transform-message doc:name="Transform Message" metadata:id="f1e28c5f-1735-45ed-96a0-31e8c34dab96">
+            <dw:input-payload/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+flatten payload]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+    </sub-flow>
+    
+        <apikit:mapping-exception-strategy name="card-details-specification-api-apiKitGlobalExceptionMapping">
+        <apikit:mapping statusCode="404">
+            <apikit:exception value="org.mule.module.apikit.exception.NotFoundException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Resource not found&quot; }" doc:name="Set Payload"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="405">
+            <apikit:exception value="org.mule.module.apikit.exception.MethodNotAllowedException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Method not allowed&quot; }" doc:name="Set Payload"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="415">
+            <apikit:exception value="org.mule.module.apikit.exception.UnsupportedMediaTypeException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Unsupported media type&quot; }" doc:name="Set Payload"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="406">
+            <apikit:exception value="org.mule.module.apikit.exception.NotAcceptableException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Not acceptable&quot; }" doc:name="Set Payload"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="400">
+            <apikit:exception value="org.mule.module.apikit.exception.BadRequestException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;message&quot;: &quot;Bad request&quot; }" doc:name="Set Payload"/>
+        </apikit:mapping>
+    </apikit:mapping-exception-strategy>
+    
+</mule>

@@ -1,0 +1,38 @@
+#%RAML 1.0
+baseUri: https://mocksvc.mulesoft.com/mocks/82516b59-d361-4edb-b421-c9b254be09cf # 
+version: v1
+title: Card Details Specification API
+
+types: 
+  CardDetail: !include datatypes/CardDetail.raml
+
+/getAccountDetails:
+  get:
+    responses: 
+      200:
+        body: 
+          application/json:
+            type: CardDetail[]
+            example: !include examples/example.raml
+      404:
+        body: 
+          application/json:
+            example:
+              message: Details of user accounts cannot be retrieved. Please try later.
+
+  /{getCardNumber}:
+    get:
+      queryParameters: 
+        accountNumber:
+          required: true
+      responses: 
+        200:
+          body: 
+            application/json:
+              type: CardDetail[]
+              example: !include examples/example.raml
+        404:
+          body: 
+            application/json:
+              example:
+                message: Details of the specified account cannot be found.
