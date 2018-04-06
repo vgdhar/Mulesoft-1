@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:cluster="http://www.mulesoft.org/schema/mule/ee/cluster" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+    <configuration defaultExceptionStrategy-ref="Exception_Handler_Strategy" doc:name="Configuration">
+        <http:config useTransportForUris="false"/>
+    </configuration>
+    <spring:beans>
+        <spring:bean id="Bean" name="auth" class="com.mule.authorize.Credentials"/>
+    </spring:beans>
+    <flow name="poc-authouizeFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/authorize/{type}" allowedMethods="POST" doc:name="HTTP"/>
+        <set-variable variableName="type" value="#[message.inboundProperties.'http.uri.params'.type]" doc:name="Credential Type"/>
+        <flow-ref name="JSON-Variables" doc:name="JSON-Variables"/>
+        <flow-ref name="decisionFlow" doc:name="decisionFlow"/>
+    </flow>
+    <sub-flow name="JSON-Variables">
+        <set-variable variableName="userId" value="#[json:userId]" doc:name="JSONuserId"/>
+        <set-variable variableName="userName" value="#[json:userName]" doc:name="JSONuserName"/>
+        <set-variable variableName="password" value="#[json:password]" doc:name="JSONpassword"/>
+    </sub-flow>
+    <sub-flow name="decisionFlow">
+        <choice doc:name="Choice">
+            <when expression="#[flowVars.type==&quot;DEV&quot;]">
+                <flow-ref name="DEV-flow" doc:name="DEV-flow"/>
+            </when>
+            <when expression="#[flowVars.type==&quot;TEST&quot;]">
+                <flow-ref name="TEST-flow" doc:name="TEST-flow"/>
+            </when>
+            <when expression="#[flowVars.type==&quot;PROD&quot;]">
+                <flow-ref name="PROD-flow" doc:name="PROD-flow"/>
+            </when>
+        </choice>
+    </sub-flow>
+    <sub-flow name="DEV-flow">
+        <invoke object-ref="auth" method="onCall" doc:name="Invoke"/>
+        <echo-component doc:name="Echo"/>
+    </sub-flow>
+    <sub-flow name="TEST-flow">
+        <logger level="INFO" doc:name="Logger"/>
+    </sub-flow>
+    <sub-flow name="PROD-flow">
+        <logger level="INFO" doc:name="Logger"/>
+    </sub-flow>
+</mule>
