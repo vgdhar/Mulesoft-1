@@ -56,11 +56,11 @@ public Object onCall(MuleEventContext eventContext) throws Exception {
 		
 	Credentials credential = new Credentials();
 	
-	String propertyId = eventContext.getMessage().getInvocationProperty("userId");
-	String propertyName = eventContext.getMessage().getInvocationProperty("userName");
-	String propertyPass = eventContext.getMessage().getInvocationProperty("password");
+	credential.userId = eventContext.getMessage().getInvocationProperty("userId");
+	credential.userName = eventContext.getMessage().getInvocationProperty("userName");
+	credential.password = eventContext.getMessage().getInvocationProperty("password");
 	
-	boolean login = credential.authorized(jsonId, jsonName, jsonPass, propertyId, propertyName, propertyPass);
+	boolean login = credential.authorized(jsonId, jsonName, jsonPass, credential.userId, credential.userName, credential.password);
 	
 	if (login) {
 		return("Entered credentials are correct. Login successful");	
