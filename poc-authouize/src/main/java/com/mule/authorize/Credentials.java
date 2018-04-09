@@ -2,7 +2,9 @@ package com.mule.authorize;
 
 import org.mule.api.MuleEventContext;
 import org.mule.api.lifecycle.Callable;
+import org.mule.extension.annotations.Configuration;
 
+@Configuration
 public class Credentials implements Callable{
 private String userId;
 private String userName;
@@ -38,7 +40,8 @@ public Credentials() {
 }
 
 public boolean authorized(String jId, String jName, String jPassword, String pId, String pName, String pPassword) {
-	if ((jId==pId) && (jName==pName) && (jPassword==pPassword)) {
+	System.out.println("JID :" + jId + "PID: " + pId + "JName: " + jName + "PName: " + pName + "JPsk: " +  jPassword + "PPsk: " + pPassword);
+	if ((jId.equals(pId)) && (jName.equals(pName)) && (jPassword.equals(pPassword))) {
 		return true;
 	} else {
 		return false;
@@ -47,13 +50,23 @@ public boolean authorized(String jId, String jName, String jPassword, String pId
 
 @Override
 public Object onCall(MuleEventContext eventContext) throws Exception {
-	String jsonId = eventContext.getMessage().getInvocationProperty("userId");
-	String jsonName = eventContext.getMessage().getInvocationProperty("userName");
-	String jsonPass = eventContext.getMessage().getInvocationProperty("password");
-	
-	
+	String jsonId = eventContext.getMessage().getInvocationProperty("jUserId");
+	String jsonName = eventContext.getMessage().getInvocationProperty("jUserName");
+	String jsonPass = eventContext.getMessage().getInvocationProperty("jPassword");
+		
 	Credentials credential = new Credentials();
-	return null;
+	
+	String propertyId = eventContext.getMessage().getInvocationProperty("userId");
+	String propertyName = eventContext.getMessage().getInvocationProperty("userName");
+	String propertyPass = eventContext.getMessage().getInvocationProperty("password");
+	
+	boolean login = credential.authorized(jsonId, jsonName, jsonPass, propertyId, propertyName, propertyPass);
+	
+	if (login) {
+		return("Entered credentials are correct. Login successful");	
+	} else {
+		return("Entered credentials are incorrect. Login failed.");	
+	}
 }
 
 }

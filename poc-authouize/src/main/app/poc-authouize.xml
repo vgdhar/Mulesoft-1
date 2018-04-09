@@ -1,19 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:cluster="http://www.mulesoft.org/schema/mule/ee/cluster" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:secure-property-placeholder="http://www.mulesoft.org/schema/mule/secure-property-placeholder" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:cluster="http://www.mulesoft.org/schema/mule/ee/cluster" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
 	xmlns:spring="http://www.springframework.org/schema/beans" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+	xsi:schemaLocation="http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
-http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/secure-property-placeholder http://www.mulesoft.org/schema/mule/secure-property-placeholder/current/mule-secure-property-placeholder.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
     <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
     <configuration defaultExceptionStrategy-ref="Exception_Handler_Strategy" doc:name="Configuration">
         <http:config useTransportForUris="false"/>
     </configuration>
     <spring:beans>
-        <spring:bean id="Bean" name="auth" class="com.mule.authorize.Credentials"/>
+        <spring:bean id="Bean" name="auth" class="com.mule.authorize.Credentials" scope="singleton"/>
     </spring:beans>
+    <secure-property-placeholder:config name="Secure_Property_Placeholder"  location="prod.properties,dev.properties,test.properties,mule-app.properties" doc:name="Secure Property Placeholder" encryptionAlgorithm="Blowfish" key="eld@cg" ignoreResourceNotFound="true" ignoreUnresolvablePlaceholders="true" />
     <flow name="poc-authouizeFlow">
         <http:listener config-ref="HTTP_Listener_Configuration" path="/authorize/{type}" allowedMethods="POST" doc:name="HTTP"/>
         <set-variable variableName="type" value="#[message.inboundProperties.'http.uri.params'.type]" doc:name="Credential Type"/>
@@ -21,16 +26,31 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
         <flow-ref name="decisionFlow" doc:name="decisionFlow"/>
     </flow>
     <sub-flow name="JSON-Variables">
-        <set-variable variableName="userId" value="#[json:userId]" doc:name="JSONuserId"/>
-        <set-variable variableName="userName" value="#[json:userName]" doc:name="JSONuserName"/>
-        <set-variable variableName="password" value="#[json:password]" doc:name="JSONpassword"/>
+        <set-variable variableName="jUserId" value="#[json:userId]" doc:name="JSONuserId"/>
+        <set-variable variableName="jUserName" value="#[json:userName]" doc:name="JSONuserName"/>
+        <set-variable variableName="jPassword" value="#[json:password]" doc:name="JSONpassword"/>
+    </sub-flow>
+    <sub-flow name="Dev-Property-Variables">
+        <set-variable variableName="userId" value="${dev.userId}" doc:name="DevUserId"/>
+        <set-variable variableName="userName" value="${dev.userName}" doc:name="DevUserName"/>
+        <set-variable variableName="password" value="${dev.password}" doc:name="DevPassword"/>
+    </sub-flow>
+	<sub-flow name="Prod-Property-Variables">
+        <set-variable variableName="userId" value="${prod.userId}" doc:name="ProdUserId"/>
+        <set-variable variableName="userName" value="${prod.userName}" doc:name="ProdUserName"/>
+        <set-variable variableName="password" value="${prod.password}" doc:name="ProdPassword"/>
+    </sub-flow>
+    <sub-flow name="Test-Property-Variables">
+        <set-variable variableName="userId" value="${test.userId}" doc:name="TestUserId"/>
+        <set-variable variableName="userName" value="${test.userName}" doc:name="TestUserName"/>
+        <set-variable variableName="password" value="${test.password}" doc:name="TestPassword"/>
     </sub-flow>
     <sub-flow name="decisionFlow">
         <choice doc:name="Choice">
             <when expression="#[flowVars.type==&quot;DEV&quot;]">
                 <flow-ref name="DEV-flow" doc:name="DEV-flow"/>
             </when>
-            <when expression="#[flowVars.type==&quot;TEST&quot;]">
+          	<when expression="#[flowVars.type==&quot;TEST&quot;]">
                 <flow-ref name="TEST-flow" doc:name="TEST-flow"/>
             </when>
             <when expression="#[flowVars.type==&quot;PROD&quot;]">
@@ -39,13 +59,18 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
         </choice>
     </sub-flow>
     <sub-flow name="DEV-flow">
-        <invoke object-ref="auth" method="onCall" doc:name="Invoke"/>
-        <echo-component doc:name="Echo"/>
-    </sub-flow>
-    <sub-flow name="TEST-flow">
-        <logger level="INFO" doc:name="Logger"/>
+        <flow-ref name="Dev-Property-Variables" doc:name="Dev-Property-Variables"/>
+        <component class="com.mule.authorize.Credentials" doc:name="Java"/>
+        <object-to-string-transformer doc:name="Object to String"/>
     </sub-flow>
     <sub-flow name="PROD-flow">
-        <logger level="INFO" doc:name="Logger"/>
+        <flow-ref name="Prod-Property-Variables" doc:name="Prod-Property-Variables"/>
+        <component class="com.mule.authorize.Credentials" doc:name="Java"/>
+        <object-to-string-transformer doc:name="Object to String"/>
+    </sub-flow>
+    <sub-flow name="TEST-flow">
+        <flow-ref name="Test-Property-Variables" doc:name="Test-Property-Variables"/>
+        <component class="com.mule.authorize.Credentials" doc:name="Java"/>
+        <object-to-string-transformer doc:name="Object to String"/>
     </sub-flow>
 </mule>
