@@ -1,7 +1,61 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.9.0"
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
-http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd"></mule>
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+    <flow name="mule-batchFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/batch-csv" allowedMethods="POST" doc:name="HTTP"/>
+        <set-property propertyName="Content-Type" value="application/x-www-form-urlencoded" doc:name="Property"/>
+        <set-payload value="#[message.inboundAttachments.'1'.content]" doc:name="Set Payload"/>
+        <batch:execute name="mule-batchBatch" doc:name="Batch Execute"/>
+        <json:object-to-json-transformer doc:name="Object to JSON"/>
+    </flow>
+    <batch:job name="mule-batchBatch">
+        <batch:input>
+            <dw:transform-message doc:name="Transform Message" metadata:id="57a78f01-ce10-4b81-981e-ae948c075d69">
+                <dw:input-payload mimeType="application/csv"/>
+                <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+payload map ((payload01 , indexOfPayload01) -> {
+	construction: payload01.construction,
+	county: payload01.county,
+	eq_site_deductible: payload01.eq_site_deductible as :number,
+	eq_site_limit: payload01.eq_site_limit as :number,
+	fl_site_deductible: payload01.fl_site_deductible as :number,
+	fl_site_limit: payload01.fl_site_limit as :number,
+	fr_site_deductible: payload01.fr_site_deductible as :number,
+	fr_site_limit: payload01.fr_site_limit as :number,
+	hu_site_deductible: payload01.hu_site_deductible as :number,
+	hu_site_limit: payload01.hu_site_limit as :number,
+	line: payload01.line,
+	point_granularity: payload01.point_granularity,
+	point_latitude: payload01.point_latitude as :number,
+	point_longitude: payload01.point_longitude,
+	policyID: payload01.policyID as :number,
+	statecode: payload01.statecode,
+	tiv_2011: payload01.tiv_2011 as :number,
+	tiv_2012: payload01.tiv_2012 as :number
+} as :object {
+	class : "diablo.batch.Batch"
+})]]></dw:set-payload>
+            </dw:transform-message>
+        </batch:input>
+        <batch:process-records>
+            <batch:step name="Batch_Step">
+                <json:object-to-json-transformer doc:name="Object to JSON"/>
+                <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+            </batch:step>
+        </batch:process-records>
+        <batch:on-complete>
+            <logger message="Batch completed....." level="INFO" doc:name="Logger"/>
+        </batch:on-complete>
+    </batch:job>
+</mule>
