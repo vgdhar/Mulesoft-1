@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+    <jms:activemq-connector name="Active_MQ" specification="1.1" username="admin" password="admin" brokerURL="tcp://localhost:61616" validateConnections="true" doc:name="Active MQ"/>
+    <flow name="poc-jms-csvFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/jms-csv" allowedMethods="POST" doc:name="HTTP"/>
+        <set-property propertyName="Content-Type" value="application/x-www-form-urlencoded" doc:name="Property"/>
+        <set-payload value="#[message.inboundAttachments.'1'.content]" doc:name="Set Payload"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="9c9812e8-3e4c-49f4-a107-c4c7ed85ffad">
+            <dw:input-payload mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+	construction: payload.construction,
+	county: payload.county,
+	eq_site_deductible: payload.eq_site_deductible as :number,
+	eq_site_limit: payload.eq_site_limit as :number,
+	fl_site_deductible: payload.fl_site_deductible as :number,
+	fl_site_limit: payload.fl_site_limit as :number,
+	fr_site_deductible: payload.fr_site_deductible as :number,
+	fr_site_limit: payload.fr_site_limit as :number,
+	hu_site_deductible: payload.hu_site_deductible as :number,
+	hu_site_limit: payload.hu_site_limit as :number,
+	line: payload.line,
+	point_granularity: payload.point_granularity,
+	point_latitude: payload.point_latitude,
+	point_longitude: payload.point_longitude,
+	policyID: payload.policyID as :number,
+	statecode: payload.statecode,
+	tiv_2011: payload.tiv_2011 as :number,
+	tiv_2012: payload.tiv_2012 as :number
+} as :object {
+	class : "diablo.batch.Batch"
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <json:object-to-json-transformer doc:name="Object to JSON"/>
+        <jms:outbound-endpoint queue="csv-dump" connector-ref="Active_MQ" doc:name="JMS"/>
+    </flow>
+</mule>
