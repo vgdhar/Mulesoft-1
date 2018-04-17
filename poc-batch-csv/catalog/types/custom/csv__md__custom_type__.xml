@@ -249,7 +249,7 @@
         <org.mule.common.metadata.DefaultMetaDataField>
           <name>point_latitude</name>
           <model class="org.mule.common.metadata.DefaultSimpleMetaDataModel">
-            <dataType>STRING</dataType>
+            <dataType>DOUBLE</dataType>
             <metaDataModelPropertiesManager>
               <properties/>
             </metaDataModelPropertiesManager>
