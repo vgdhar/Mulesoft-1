@@ -17,13 +17,13 @@ http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee
         <set-property propertyName="Content-Type" value="application/x-www-form-urlencoded" doc:name="Property"/>
         <set-payload value="#[message.inboundAttachments.'1'.content]" doc:name="Set Payload"/>
         <byte-array-to-object-transformer doc:name="Byte Array to Object"/>
+        <json:object-to-json-transformer doc:name="Object to JSON"/>
         <jms:outbound-endpoint queue="jmsQueue" connector-ref="Active_MQ" doc:name="JMS"/>
     </flow>
     <flow name="poc-jms-csv-receiver-Flow">
         <jms:inbound-endpoint queue="jmsQueue" connector-ref="Active_MQ" doc:name="JMS">
             <jms:transaction action="ALWAYS_BEGIN"/>
         </jms:inbound-endpoint>
-        <json:object-to-json-transformer doc:name="Object to JSON"/>
         <logger message="#[payload]" level="INFO" doc:name="Logger"/>
     </flow>
 </mule>
