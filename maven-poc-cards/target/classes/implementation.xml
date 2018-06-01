@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:cluster="http://www.mulesoft.org/schema/mule/ee/cluster" xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:mulerequester="http://www.mulesoft.org/schema/mule/mulerequester" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/mulerequester http://www.mulesoft.org/schema/mule/mulerequester/current/mule-mulerequester.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+    <file:connector name="File" readFromDirectory="D:\Users\sacchakr\Desktop\new" workFileNamePattern="details.csv" autoDelete="false" streaming="true" validateConnections="true" doc:name="File"/>
+    <configuration defaultExceptionStrategy-ref="Exception_Handler_Strategy" doc:name="Configuration">
+        <http:config useTransportForUris="false"/>
+    </configuration>
+    <flow name="getAccountDetailsURIParams">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/getAccountDetails/{accountNumber}" doc:name="HTTP"/>
+        <set-session-variable variableName="account" value="#[message.inboundProperties.'http.uri.params'.accountNumber]" doc:name="Session Variable"/>
+        <validation:is-number message="#['\n']Kindly enter only numbers as the card number. Alphabets and special characters are not allowed." value="#[sessionVars.account]" numberType="LONG" doc:name="Validation"/>
+        <validation:validate-size message="#['\n']Please enter a card number of length between 16 &amp; 19." value="#[sessionVars.account]" min="16" max="19" doc:name="Validation"/>
+        <choice doc:name="Choice">
+            <when expression="#[sessionVars.account==&quot;1234567890123450&quot;]">
+                <flow-ref name="getMalyajDetailsFlow" doc:name="getMalyajDetailsFlow"/>
+            </when>
+            <when expression="#[sessionVars.account==&quot;1234367891953450&quot;]">
+                <flow-ref name="getSmritiDetailsFlow" doc:name="getSmritiDetailsFlow"/>
+            </when>
+            <when expression="#[sessionVars.account==&quot;1234567814973450&quot;]">
+                <flow-ref name="getSakshiDetailsFlow" doc:name="getSakshiDetailsFlow"/>
+            </when>
+            <when expression="#[sessionVars.account==&quot;1234567890393450&quot;]">
+                <flow-ref name="getSachinDetailsFlow" doc:name="getSachinDetailsFlow"/>
+            </when>
+            <when expression="#[sessionVars.account==&quot;1234557890123450&quot;]">
+                <flow-ref name="getNishchalDetailsFlow" doc:name="getNishchalDetailsFlow"/>
+            </when>
+            <when expression="#[sessionVars.account==&quot;1034567890123450&quot;]">
+                <flow-ref name="getMonicaDetailsFlow" doc:name="getMonicaDetailsFlow"/>
+            </when>
+            <when expression="#[sessionVars.account==&quot;1234569890123450&quot;]">
+                <flow-ref name="getMohiniDetailsFlow" doc:name="getMohiniDetailsFlow"/>
+            </when>
+        </choice>
+    </flow>
+    <sub-flow name="getMalyajDetailsFlow">
+        <mulerequester:request resource="file://src/main/resources/1.csv" doc:name="Mule Requester"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="9606fca4-876e-4e87-b072-92360e0161be">
+            <dw:input-payload mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+    </sub-flow>
+    <sub-flow name="getMohiniDetailsFlow">
+        <mulerequester:request resource="file://src/main/resources/2.csv" doc:name="Mule Requester"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="e421b5f4-0ad0-470a-a0b1-f396dd7d67a8">
+            <dw:input-payload mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+    </sub-flow>
+    <sub-flow name="getMonicaDetailsFlow">
+        <mulerequester:request resource="file://src/main/resources/3.csv" doc:name="Mule Requester"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="96be7230-3a2f-4e8a-afb2-34f2b8f379c3">
+            <dw:input-payload mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+    </sub-flow>
+    <sub-flow name="getNishchalDetailsFlow">
+        <mulerequester:request resource="file://src/main/resources/4.csv" doc:name="Mule Requester"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="f7bf8031-b6d9-476c-b00b-bbbbed17771f">
+            <dw:input-payload mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+    </sub-flow>
+    <sub-flow name="getSachinDetailsFlow">
+        <mulerequester:request resource="file://src/main/resources/5.csv" doc:name="Mule Requester"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="8901b2eb-5c7c-4f15-9c4f-26cc041424b1">
+            <dw:input-payload mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+    </sub-flow>
+    <sub-flow name="getSakshiDetailsFlow">
+        <mulerequester:request resource="file://src/main/resources/6.csv" doc:name="Mule Requester"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="7f9a94fc-97ef-4a76-ab8e-f21c38e6197b">
+            <dw:input-payload mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="file://src/main/resources/details.csv" level="INFO" doc:name="Logger"/>
+    </sub-flow>
+    <sub-flow name="getSmritiDetailsFlow">
+        <mulerequester:request resource="file://src/main/resources/7.csv" doc:name="Mule Requester"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="7a5a7660-d2a7-4921-b0b4-db7d873e11e3">
+            <dw:input-payload mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+    </sub-flow>
+    <sub-flow name="getAllDetailsFlow">
+        <scatter-gather doc:name="Scatter-Gather">
+            <flow-ref name="getMalyajDetailsFlow" doc:name="getMalyajDetailsFlow"/>
+            <flow-ref name="getMohiniDetailsFlow" doc:name="getMohiniDetailsFlow"/>
+            <flow-ref name="getMonicaDetailsFlow" doc:name="getMonicaDetailsFlow"/>
+            <flow-ref name="getNishchalDetailsFlow" doc:name="getNishchalDetailsFlow"/>
+            <flow-ref name="getSachinDetailsFlow" doc:name="getSachinDetailsFlow"/>
+            <flow-ref name="getSakshiDetailsFlow" doc:name="getSakshiDetailsFlow"/>
+            <flow-ref name="getSmritiDetailsFlow" doc:name="getSmritiDetailsFlow"/>
+        </scatter-gather>
+        <dw:transform-message doc:name="Transform Message" metadata:id="f1e28c5f-1735-45ed-96a0-31e8c34dab96">
+            <dw:input-payload/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+flatten payload]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+    </sub-flow>
+    <flow name="getAllDetails">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/getAccountDetails/" doc:name="HTTP"/>
+        <flow-ref name="getAllDetailsFlow" doc:name="getAllDetailsFlow"/>
+    </flow>
+    <flow name="getCardWithQueryParams">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/getcards" doc:name="HTTP"/>
+        <set-session-variable variableName="card" value="#[message.inboundProperties.'http.query.params'.card]" doc:name="Session Variable"/>
+        <validation:is-number message="#['\n']Kindly enter only numbers as the card number. Alphabets and special characters are not allowed." value="#[sessionVars.card]" numberType="LONG" doc:name="Validation"/>
+        <validation:validate-size message="#['\n']Please enter a card number of length between 16 &amp; 19." value="#[sessionVars.card]" min="16" max="19" doc:name="Validation"/>
+        <choice doc:name="Choice">
+            <when expression="#[sessionVars.card==&quot;1234567890123450&quot;]">
+                <flow-ref name="getMalyajDetailsFlow" doc:name="getMalyajDetailsFlow"/>
+            </when>
+            <when expression="#[sessionVars.card==&quot;1234367891953450&quot;]">
+                <flow-ref name="getSmritiDetailsFlow" doc:name="getSmritiDetailsFlow"/>
+            </when>
+            <when expression="#[sessionVars.card==&quot;1234567814973450&quot;]">
+                <flow-ref name="getSakshiDetailsFlow" doc:name="getSakshiDetailsFlow"/>
+            </when>
+            <when expression="#[sessionVars.card==&quot;1234567890393450&quot;]">
+                <flow-ref name="getSachinDetailsFlow" doc:name="getSachinDetailsFlow"/>
+            </when>
+            <when expression="#[sessionVars.card==&quot;1234557890123450&quot;]">
+                <flow-ref name="getNishchalDetailsFlow" doc:name="getNishchalDetailsFlow"/>
+            </when>
+            <when expression="#[sessionVars.card==&quot;1034567890123450&quot;]">
+                <flow-ref name="getMonicaDetailsFlow" doc:name="getMonicaDetailsFlow"/>
+            </when>
+            <when expression="#[sessionVars.card==&quot;1234569890123450&quot;]">
+                <flow-ref name="getMohiniDetailsFlow" doc:name="getMohiniDetailsFlow"/>
+            </when>
+        </choice>
+    </flow>
+</mule>

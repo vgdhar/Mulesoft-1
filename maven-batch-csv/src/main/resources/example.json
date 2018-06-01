@@ -1,0 +1,22 @@
+[
+  {
+    "policyID": 398149,
+    "statecode": "FL",
+    "county": "PINELLAS COUNTY",
+    "eq_site_limit": 373488.3,
+    "hu_site_limit": 373488.3,
+    "fl_site_limit": 373488.3,
+    "fr_site_limit": 373488.3,
+    "tiv_2011": 373488.3,
+    "tiv_2012": 373488.3,
+    "eq_site_deductible": 0,
+    "hu_site_deductible": 0,
+    "fl_site_deductible": 0,
+    "fr_site_deductible": 0,
+    "point_latitude": null,
+    "point_longitude": 28.06444,
+    "line": "Residential",
+    "construction": "Masonry",
+    "point_granularity": 1
+  }
+]
